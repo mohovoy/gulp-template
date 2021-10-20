@@ -10,6 +10,8 @@ const clean_css = require('gulp-clean-css');
 const rename = require('gulp-rename');
 const uglify = require('gulp-uglify-es').default;
 const image = require('gulp-image');
+const plumber = require("gulp-plumber");
+const panini = require("panini");
 
 const srcFolder = "src/";
 const distFolder ="dist/";
@@ -23,9 +25,9 @@ const path = {
         fonts: distFolder + "assets/fonts/",
     },
     src: {
-        html: [srcFolder + "/*.html", "!" + srcFolder + "/_*.html"],
-        css: srcFolder + "assets/scss/style.scss",
-        js: srcFolder + "assets/js/script.js",
+        html: srcFolder + "*.html",
+        css: srcFolder + "assets/scss/*.scss",
+        js: srcFolder + "assets/js/*.js",
         img: srcFolder + "assets/img/**/*.{jpg,png,svg,gif,ico,webp}",
         fonts: srcFolder + "assets/fonts/*.ttf",
     },
@@ -49,8 +51,16 @@ function browserSync() {
 }
 
 function html() {
+    panini.refresh();
     return src(path.src.html)
-        .pipe(fileinclude())
+        .pipe(plumber())
+        .pipe(panini({
+            root: srcFolder,
+            layouts: srcFolder + 'layouts/',
+            partials: srcFolder + 'partials/',
+            helpers: srcFolder + 'helpers/',
+            data: srcFolder + 'data/'
+        }))
         .pipe(dest(path.build.html))
         .pipe(browsersync.stream())
 }
@@ -65,7 +75,7 @@ function css() {
         .pipe(group_media())
         .pipe(
             autoprefixer({
-                overrideBrowserlist: ["last 5 versions"],
+                overrideBrowserlist: ["last 2 versions"],
                 cascade: true
             })
         )
